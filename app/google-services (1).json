@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "244434266657",
+    "project_id": "voting-app-7a3a9",
+    "storage_bucket": "voting-app-7a3a9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:244434266657:android:bb3016b435451fb3819160",
+        "android_client_info": {
+          "package_name": "com.john.votingapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTwJdi-d0WR2BoZQg-pQAB_UzvEGe2-i0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:244434266657:android:6104f7cf73d6124c819160",
+        "android_client_info": {
+          "package_name": "com.vigor.hotelapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTwJdi-d0WR2BoZQg-pQAB_UzvEGe2-i0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
