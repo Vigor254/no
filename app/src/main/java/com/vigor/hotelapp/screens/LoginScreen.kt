@@ -2,7 +2,9 @@ package com.vigor.hotelapp.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,7 +27,11 @@ fun LoginScreen(navController: NavHostController, viewModel: HotelViewModel = hi
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Login", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            text = "Login",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -33,6 +39,7 @@ fun LoginScreen(navController: NavHostController, viewModel: HotelViewModel = hi
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
+            leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email") },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -41,6 +48,7 @@ fun LoginScreen(navController: NavHostController, viewModel: HotelViewModel = hi
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password") },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -63,14 +71,19 @@ fun LoginScreen(navController: NavHostController, viewModel: HotelViewModel = hi
         Spacer(modifier = Modifier.height(8.dp))
 
         TextButton(
-            onClick = { navController.navigate("signup") }
+            onClick = { navController.navigate("signup") },
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text("Don't have an account? Sign Up")
         }
 
         authError?.let {
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = it, color = MaterialTheme.colorScheme.error)
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -80,7 +93,8 @@ fun LoginScreen(navController: NavHostController, viewModel: HotelViewModel = hi
                 navController.navigate("home") {
                     popUpTo("home") { inclusive = true }
                 }
-            }
+            },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
             Icon(
                 imageVector = Icons.Default.Home,

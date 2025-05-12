@@ -1,6 +1,7 @@
 package com.vigor.hotelapp.data
 
 import com.vigor.hotelapp.data.local.HotelDao
+import com.vigor.hotelapp.data.local.toHotel
 import com.vigor.hotelapp.data.local.toHotelEntity
 import com.vigor.hotelapp.model.Booking
 import com.vigor.hotelapp.model.Hotel

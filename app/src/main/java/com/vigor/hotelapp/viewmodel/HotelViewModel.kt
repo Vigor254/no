@@ -6,9 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
-import com.google.firebase.auth.FirebaseAuthInvalidUserException
-import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.vigor.hotelapp.R
 import com.vigor.hotelapp.data.HotelRepository
 import com.vigor.hotelapp.model.Booking
@@ -29,23 +26,11 @@ class HotelViewModel @Inject constructor(
     val hotels = mutableStateOf<List<Hotel>>(emptyList())
     val currentUser = mutableStateOf<User?>(null)
     val bookings = mutableStateOf<List<Booking>>(emptyList())
-    val authError = mutableStateOf<String?>(null) // To display errors to UI
+    val authError = mutableStateOf<String?>(null)
 
-    private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
     init {
-        // Check if user is already signed in
-        val firebaseUser = firebaseAuth.currentUser
-        if (firebaseUser != null) {
-            currentUser.value = User(
-                id = firebaseUser.uid,
-                email = firebaseUser.email ?: "",
-                isAdmin = firebaseUser.email == "admin@hotelapp.com"
-            )
-            loadBookings()
-        }
-
-        // Load initial hotels
         viewModelScope.launch {
             val currentHotels = repository.getAllHotels()
             if (currentHotels.isEmpty()) {
@@ -75,7 +60,105 @@ class HotelViewModel @Inject constructor(
                 initialHotels.forEach { repository.insertHotel(it) }
             }
             loadHotels()
+
+            auth.currentUser?.let { firebaseUser ->
+                currentUser.value = User(
+                    id = firebaseUser.uid,
+                    fullName = firebaseUser.displayName ?: "Guest",
+                    email = firebaseUser.email ?: ""
+                )
+                loadBookings()
+            }
         }
+    }
+
+    fun login(email: String, password: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                auth.signInWithEmailAndPassword(email, password)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            val firebaseUser = auth.currentUser
+                            currentUser.value = firebaseUser?.let {
+                                User(
+                                    id = it.uid,
+                                    fullName = it.displayName ?: "Guest",
+                                    email = it.email ?: ""
+                                )
+                            }
+                            loadBookings()
+                            authError.value = null
+                            onResult(true)
+                            Log.d("HotelViewModel", "Logged in as: $email")
+                        } else {
+                            handleAuthError(task.exception)
+                            onResult(false)
+                        }
+                    }
+            } catch (e: Exception) {
+                handleAuthError(e)
+                onResult(false)
+            }
+        }
+    }
+
+    fun signup(fullName: String, email: String, password: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                auth.createUserWithEmailAndPassword(email, password)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            val firebaseUser = auth.currentUser
+                            firebaseUser?.updateProfile(
+                                com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                                    .setDisplayName(fullName)
+                                    .build()
+                            )
+                            currentUser.value = firebaseUser?.let {
+                                User(
+                                    id = it.uid,
+                                    fullName = fullName,
+                                    email = it.email ?: ""
+                                )
+                            }
+                            authError.value = null
+                            onResult(true)
+                            Log.d("HotelViewModel", "Signed up as: $email")
+                        } else {
+                            handleAuthError(task.exception)
+                            onResult(false)
+                        }
+                    }
+            } catch (e: Exception) {
+                handleAuthError(e)
+                onResult(false)
+            }
+        }
+    }
+
+    fun logout() {
+        auth.signOut()
+        currentUser.value = null
+        bookings.value = emptyList()
+        authError.value = null
+        Log.d("HotelViewModel", "Logged out")
+    }
+
+    private fun handleAuthError(exception: Exception?) {
+        authError.value = when (exception) {
+            is FirebaseAuthException -> {
+                when (exception.errorCode) {
+                    "ERROR_INVALID_EMAIL" -> "Invalid email format."
+                    "ERROR_WRONG_PASSWORD" -> "Incorrect password."
+                    "ERROR_USER_NOT_FOUND" -> "No account exists for this email."
+                    "ERROR_EMAIL_ALREADY_IN_USE" -> "This email is already registered."
+                    "ERROR_WEAK_PASSWORD" -> "Password is too weak. Use at least 6 characters."
+                    else -> "Authentication failed: ${exception.message}"
+                }
+            }
+            else -> "An error occurred: ${exception?.message}"
+        }
+        Log.e("HotelViewModel", "Auth error: ${exception?.message}")
     }
 
     fun loadHotels() {
@@ -91,32 +174,12 @@ class HotelViewModel @Inject constructor(
         }
     }
 
-    fun addHotel(hotel: Hotel) {
-        viewModelScope.launch {
-            val hotelWithValidImage = if (hotel.imageResId == 0) {
-                hotel.copy(imageResId = R.drawable.hotel1)
-            } else {
-                hotel
-            }
-            repository.insertHotel(hotelWithValidImage)
-            loadHotels()
-        }
-    }
-
-    fun deleteHotel(hotelId: Int) {
-        viewModelScope.launch {
-            repository.deleteHotel(hotelId)
-            loadHotels()
-        }
-    }
-
     fun bookHotel(hotelId: Int, hours: Int) {
         viewModelScope.launch {
             val hotel = repository.getHotelById(hotelId) ?: return@launch
             val totalCost = hotel.pricePerHour * hours
-            val userId = currentUser.value?.id ?: return@launch
             val booking = Booking(
-                userId = userId,
+                userId = currentUser.value?.id ?: return@launch,
                 hotelId = hotelId,
                 hours = hours,
                 totalCost = totalCost,
@@ -132,80 +195,5 @@ class HotelViewModel @Inject constructor(
             val userId = currentUser.value?.id ?: return@launch
             bookings.value = repository.getBookingsByUser(userId)
         }
-    }
-
-    fun login(email: String, password: String, onResult: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            try {
-                firebaseAuth.signInWithEmailAndPassword(email, password)
-                    .addOnSuccessListener { result ->
-                        val firebaseUser = result.user
-                        if (firebaseUser != null) {
-                            currentUser.value = User(
-                                id = firebaseUser.uid,
-                                email = firebaseUser.email ?: "",
-                                isAdmin = email == "admin@hotelapp.com" // TODO: Use custom claims for admin
-                            )
-                            loadBookings()
-                            authError.value = null
-                            onResult(true)
-                        } else {
-                            authError.value = "Login failed: No user found"
-                            onResult(false)
-                        }
-                    }
-                    .addOnFailureListener { exception ->
-                        authError.value = when (exception) {
-                            is FirebaseAuthInvalidUserException -> "No account exists for this email"
-                            is FirebaseAuthInvalidCredentialsException -> "Invalid password"
-                            else -> "Login failed: ${exception.message}"
-                        }
-                        onResult(false)
-                    }
-            } catch (e: Exception) {
-                authError.value = "Login error: ${e.message}"
-                onResult(false)
-            }
-        }
-    }
-
-    fun signup(email: String, password: String, onResult: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            try {
-                firebaseAuth.createUserWithEmailAndPassword(email, password)
-                    .addOnSuccessListener { result ->
-                        val firebaseUser = result.user
-                        if (firebaseUser != null) {
-                            currentUser.value = User(
-                                id = firebaseUser.uid,
-                                email = firebaseUser.email ?: "",
-                                isAdmin = email == "admin@hotelapp.com"
-                            )
-                            authError.value = null
-                            onResult(true)
-                        } else {
-                            authError.value = "Signup failed: No user created"
-                            onResult(false)
-                        }
-                    }
-                    .addOnFailureListener { exception ->
-                        authError.value = when (exception) {
-                            is FirebaseAuthUserCollisionException -> "Email already in use"
-                            else -> "Signup failed: ${exception.message}"
-                        }
-                        onResult(false)
-                    }
-            } catch (e: Exception) {
-                authError.value = "Signup error: ${e.message}"
-                onResult(false)
-            }
-        }
-    }
-
-    fun logout() {
-        firebaseAuth.signOut()
-        currentUser.value = null
-        bookings.value = emptyList()
-        authError.value = null
     }
 }

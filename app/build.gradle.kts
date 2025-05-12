@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.hilt.android)
+    implementation(libs.androidx.navigation.runtime.android)
     ksp(libs.hilt.compiler)
     implementation(libs.coil.compose)
     implementation(platform(libs.firebase.bom))

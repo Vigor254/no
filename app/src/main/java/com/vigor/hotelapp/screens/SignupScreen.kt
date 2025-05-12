@@ -2,7 +2,10 @@ package com.vigor.hotelapp.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,6 +17,7 @@ import com.vigor.hotelapp.viewmodel.HotelViewModel
 
 @Composable
 fun SignupScreen(navController: NavHostController, viewModel: HotelViewModel = hiltViewModel()) {
+    var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val authError by viewModel.authError
@@ -25,14 +29,28 @@ fun SignupScreen(navController: NavHostController, viewModel: HotelViewModel = h
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Sign Up", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            text = "Sign Up",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = fullName,
+            onValueChange = { fullName = it },
+            label = { Text("Full Name") },
+            leadingIcon = { Icon(Icons.Default.Person, contentDescription = "Full Name") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
+            leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email") },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -41,13 +59,14 @@ fun SignupScreen(navController: NavHostController, viewModel: HotelViewModel = h
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password") },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = {
-                viewModel.signup(email, password) { success ->
+                viewModel.signup(fullName, email, password) { success ->
                     if (success) {
                         navController.navigate("home") {
                             popUpTo("signup") { inclusive = true }
@@ -63,14 +82,19 @@ fun SignupScreen(navController: NavHostController, viewModel: HotelViewModel = h
         Spacer(modifier = Modifier.height(8.dp))
 
         TextButton(
-            onClick = { navController.navigate("login") }
+            onClick = { navController.navigate("login") },
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text("Already have an account? Login")
         }
 
         authError?.let {
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = it, color = MaterialTheme.colorScheme.error)
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -80,7 +104,8 @@ fun SignupScreen(navController: NavHostController, viewModel: HotelViewModel = h
                 navController.navigate("home") {
                     popUpTo("home") { inclusive = true }
                 }
-            }
+            },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
             Icon(
                 imageVector = Icons.Default.Home,

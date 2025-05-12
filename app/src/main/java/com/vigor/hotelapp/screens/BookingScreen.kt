@@ -13,65 +13,74 @@ import androidx.navigation.NavHostController
 import com.vigor.hotelapp.viewmodel.HotelViewModel
 
 @Composable
-fun BookingScreen(navController: NavHostController, hotelId: Int, viewModel: HotelViewModel = hiltViewModel()) {
+fun BookingScreen(
+    navController: NavHostController,
+    hotelId: Int,
+    viewModel: HotelViewModel = hiltViewModel()
+) {
     var hours by remember { mutableStateOf(1) }
-
-    val hotel = viewModel.hotels.value.find { it.id == hotelId }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        hotel?.let {
-            Text(text = "Book ${it.name}", style = MaterialTheme.typography.titleLarge)
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(text = "Price: $${it.pricePerHour}/hour")
-            Spacer(modifier = Modifier.height(8.dp))
-            TextField(
-                value = hours.toString(),
-                onValueChange = { hours = it.toIntOrNull() ?: 1 },
-                label = { Text("Hours") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = {
-                    viewModel.bookHotel(hotelId, hours)
-                    navController.navigate("profile") {
-                        popUpTo("booking") { inclusive = true }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Confirm Booking")
-            }
-        } ?: Text(text = "Hotel not found", color = MaterialTheme.colorScheme.error)
-
-        Spacer(modifier = Modifier.weight(1f))
-
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.Center
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(
-                onClick = {
-                    navController.navigate("home") {
-                        popUpTo("home") { inclusive = true }
-                    }
-                }
-            ) {
+            Text(
+                text = "Book Hotel ID: $hotelId",
+                style = MaterialTheme.typography.headlineMedium
+            )
+            IconButton(onClick = { navController.navigate("home") }) {
                 Icon(
                     imageVector = Icons.Default.Home,
-                    contentDescription = "Home",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(48.dp)
+                    contentDescription = "Navigate to Home",
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        OutlinedTextField(
+            value = hours.toString(),
+            onValueChange = {
+                hours = it.toIntOrNull() ?: 1
+                if (hours <= 0) {
+                    errorMessage = "Hours must be greater than 0"
+                } else {
+                    errorMessage = null
+                }
+            },
+            label = { Text("Hours") },
+            isError = errorMessage != null,
+            modifier = Modifier.fillMaxWidth()
+        )
+        errorMessage?.let {
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = {
+                if (hours > 0) {
+                    viewModel.bookHotel(hotelId, hours)
+                    navController.navigate("profile")
+                } else {
+                    errorMessage = "Please enter valid hours"
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = hours > 0
+        ) {
+            Text("Confirm Booking")
         }
     }
 }

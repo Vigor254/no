@@ -3,10 +3,11 @@ package com.vigor.hotelapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.Composable
 import androidx.navigation.compose.rememberNavController
-import dagger.hilt.android.AndroidEntryPoint
+import com.vigor.hotelapp.navigation.NavGraph
 import com.vigor.hotelapp.ui.theme.HotelAppTheme
-import com.vigor.hotelapp.navigation.AppNavHost
+import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -14,9 +15,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             HotelAppTheme {
-                val navController = rememberNavController()
-                AppNavHost(navController = navController)
+                HotelApp()
             }
         }
     }
+}
+
+@Composable
+fun HotelApp() {
+    val navController = rememberNavController()
+    NavGraph(navController = navController)
 }
