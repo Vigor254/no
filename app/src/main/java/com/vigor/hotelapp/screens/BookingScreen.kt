@@ -1,103 +1,100 @@
 package com.vigor.hotelapp.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vigor.hotelapp.viewmodel.HotelViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookingScreen(
     navController: NavHostController,
     hotelId: Int,
-    viewModel: HotelViewModel = hiltViewModel()
+    viewModel: HotelViewModel = hiltViewModel(),
+    modifier: Modifier = Modifier
 ) {
-    var hours by remember { mutableStateOf(1) }
+    var hours by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var showDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Book Hotel ID: $hotelId",
-                style = MaterialTheme.typography.headlineMedium
-            )
-            IconButton(onClick = { navController.navigate("home") }) {
-                Icon(
-                    imageVector = Icons.Default.Home,
-                    contentDescription = "Navigate to Home",
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Book Hotel",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
         OutlinedTextField(
-            value = hours.toString(),
-            onValueChange = {
-                hours = it.toIntOrNull() ?: 1
-                if (hours <= 0) {
-                    errorMessage = "Hours must be greater than 0"
-                } else {
-                    errorMessage = null
-                }
-            },
+            value = hours,
+            onValueChange = { hours = it },
             label = { Text("Hours") },
-            isError = errorMessage != null,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth()
         )
-        errorMessage?.let {
-            Text(
-                text = it,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-        }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = phoneNumber,
             onValueChange = { phoneNumber = it },
             label = { Text("Phone Number") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             modifier = Modifier.fillMaxWidth()
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = notes,
             onValueChange = { notes = it },
-            label = { Text("Additional Notes") },
-            modifier = Modifier.fillMaxWidth(),
-            maxLines = 3
+            label = { Text("Notes") },
+            modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
-                if (hours > 0) {
-                    viewModel.bookHotel(hotelId, hours, phoneNumber, notes)
-                    navController.navigate("profile")
+                val hoursInt = hours.toIntOrNull()
+                if (hoursInt != null && phoneNumber.isNotBlank()) {
+                    viewModel.bookHotel(hotelId, hoursInt, phoneNumber, notes)
+                    showDialog = true
                 } else {
-                    errorMessage = "Please enter valid hours"
+                    Toast.makeText(context, "Please enter valid hours and phone number", Toast.LENGTH_SHORT).show()
                 }
             },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = hours > 0
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text("Confirm Booking")
         }
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Booking Confirmed") },
+            text = { Text("Your booking has been successfully placed!") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDialog = false
+                        navController.navigate("home") {
+                            popUpTo("home") { inclusive = true }
+                        }
+                    }
+                ) {
+                    Text("OK")
+                }
+            }
+        )
     }
 }

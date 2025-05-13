@@ -10,8 +10,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.vigor.hotelapp.admin.AddEditHotelScreen
-import com.vigor.hotelapp.admin.HomeScreenWithAdmin
+import com.vigor.hotelapp.admin.AdminScreen
 import com.vigor.hotelapp.screens.BookingScreen
+import com.vigor.hotelapp.screens.HomeScreen
 import com.vigor.hotelapp.screens.HotelDetailsScreen
 import com.vigor.hotelapp.screens.LoginScreen
 import com.vigor.hotelapp.screens.ProfileScreen
@@ -23,9 +24,7 @@ import com.vigor.hotelapp.viewmodel.HotelViewModel
 fun NavGraph(navController: NavHostController) {
     NavHost(navController = navController, startDestination = "splash") {
         composable("splash") { SplashScreen(navController) }
-        composable("home") {
-            HomeScreenWithAdmin(navController)
-        }
+        composable("home") { HomeScreen(navController) }
         composable("login") { LoginScreen(navController) }
         composable("signup") { SignupScreen(navController) }
         composable("profile") { ProfileScreen(navController) }
@@ -53,7 +52,7 @@ fun NavGraph(navController: NavHostController) {
         }
         composable("admin") {
             val viewModel: HotelViewModel = hiltViewModel()
-            com.vigor.hotelapp.admin.AdminScreen(
+            AdminScreen(
                 viewModel = viewModel,
                 onAddHotel = { navController.navigate("add_edit_hotel") },
                 onEditHotel = { hotelId -> navController.navigate("add_edit_hotel/$hotelId") },

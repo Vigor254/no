@@ -29,12 +29,21 @@ fun HomeScreen(
 ) {
     val hotels = viewModel.hotels.collectAsState()
     val user = viewModel.currentUser.collectAsState().value
+    val isAdmin = viewModel.isAdmin.collectAsState().value
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("HotelApp") },
                 actions = {
+                    if (isAdmin) {
+                        IconButton(onClick = { navController.navigate("admin") }) {
+                            Icon(
+                                imageVector = Icons.Default.AccountCircle,
+                                contentDescription = "Admin Panel"
+                            )
+                        }
+                    }
                     IconButton(onClick = {
                         if (user != null) {
                             navController.navigate("profile")
@@ -75,7 +84,11 @@ fun HomeScreen(
                                 navController.navigate("hotelDetails?hotelId=${hotel.id}")
                             },
                             onBookClick = {
-                                navController.navigate("booking?hotelId=${hotel.id}")
+                                if (user != null) {
+                                    navController.navigate("booking?hotelId=${hotel.id}")
+                                } else {
+                                    navController.navigate("login")
+                                }
                             }
                         )
                     }

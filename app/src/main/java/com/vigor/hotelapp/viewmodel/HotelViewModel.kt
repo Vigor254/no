@@ -58,6 +58,7 @@ class HotelViewModel @Inject constructor(
     private fun loadUser() {
         viewModelScope.launch {
             val userId = auth.currentUser?.uid
+            Log.d("HotelViewModel", "Loading user, userId: $userId")
             if (userId != null) {
                 try {
                     val doc = firestore.collection("users").document(userId).get().await()
@@ -67,10 +68,16 @@ class HotelViewModel @Inject constructor(
                         _currentUser.value = User(userId, fullName, email)
                         _isAdmin.value = doc.getBoolean("isAdmin") ?: false
                         _bookings.value = hotelRepository.getBookingsByUser(userId)
+                        Log.d("HotelViewModel", "User loaded: $fullName, isAdmin: ${_isAdmin.value}, bookings: ${_bookings.value}")
+                    } else {
+                        Log.d("HotelViewModel", "User document does not exist")
                     }
                 } catch (e: Exception) {
                     _authError.value = "Failed to load user: ${e.message}"
+                    Log.e("HotelViewModel", "User load error: ${e.message}")
                 }
+            } else {
+                Log.d("HotelViewModel", "No user logged in")
             }
         }
     }
@@ -82,9 +89,11 @@ class HotelViewModel @Inject constructor(
                 loadUser()
                 _authError.value = null
                 onResult(true)
+                Log.d("HotelViewModel", "Login successful")
             } catch (e: Exception) {
                 _authError.value = "Login failed: ${e.message}"
                 onResult(false)
+                Log.e("HotelViewModel", "Login failed: ${e.message}")
             }
         }
     }
@@ -104,13 +113,16 @@ class HotelViewModel @Inject constructor(
                     loadUser()
                     _authError.value = null
                     onResult(true)
+                    Log.d("HotelViewModel", "Signup successful")
                 } else {
                     _authError.value = "Signup failed: No user ID"
                     onResult(false)
+                    Log.e("HotelViewModel", "Signup failed: No user ID")
                 }
             } catch (e: Exception) {
                 _authError.value = "Signup failed: ${e.message}"
                 onResult(false)
+                Log.e("HotelViewModel", "Signup failed: ${e.message}")
             }
         }
     }
@@ -121,6 +133,7 @@ class HotelViewModel @Inject constructor(
         _isAdmin.value = false
         _bookings.value = emptyList()
         _authError.value = null
+        Log.d("HotelViewModel", "Logged out")
     }
 
     fun bookHotel(hotelId: Int, hours: Int, phoneNumber: String, notes: String) {
@@ -141,6 +154,9 @@ class HotelViewModel @Inject constructor(
                 )
                 hotelRepository.insertBooking(booking)
                 _bookings.value = hotelRepository.getBookingsByUser(userId)
+                Log.d("HotelViewModel", "Booking added: $booking")
+            } else {
+                Log.e("HotelViewModel", "Booking failed: hotel=$hotel, userId=$userId")
             }
         }
     }
@@ -155,6 +171,7 @@ class HotelViewModel @Inject constructor(
                 location = location
             )
             hotelRepository.insertHotel(hotel)
+            Log.d("HotelViewModel", "Hotel added: $hotel")
         }
     }
 
@@ -169,12 +186,14 @@ class HotelViewModel @Inject constructor(
                 location = location
             )
             hotelRepository.updateHotel(hotel)
+            Log.d("HotelViewModel", "Hotel updated: $hotel")
         }
     }
 
     fun deleteHotel(id: Int) {
         viewModelScope.launch {
             hotelRepository.deleteHotel(id)
+            Log.d("HotelViewModel", "Hotel deleted: id=$id")
         }
     }
 }
