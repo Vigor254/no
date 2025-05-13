@@ -1,46 +1,34 @@
 package com.vigor.hotelapp.screens
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import android.util.Log
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
+import com.vigor.hotelapp.R
 import com.vigor.hotelapp.model.Hotel
-import com.vigor.hotelapp.model.User
 import com.vigor.hotelapp.viewmodel.HotelViewModel
 
-@ExperimentalMaterial3Api
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navController: NavHostController,
-    viewModel: HotelViewModel = hiltViewModel<HotelViewModel>()
+    viewModel: HotelViewModel = hiltViewModel(),
+    modifier: Modifier = Modifier
 ) {
-    val hotels = viewModel.hotels.value
-    val user = viewModel.currentUser.value
+    val hotels = viewModel.hotels.collectAsState()
+    val user = viewModel.currentUser.collectAsState().value
 
     Scaffold(
         topBar = {
@@ -67,9 +55,8 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp)
         ) {
-            if (hotels.isEmpty()) {
+            if (hotels.value.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -77,11 +64,20 @@ fun HomeScreen(
                     CircularProgressIndicator()
                 }
             } else {
-                LazyColumn {
-                    items(hotels) { hotel ->
-                        HotelCard(hotel = hotel, onClick = {
-                            navController.navigate("hotelDetails?hotelId=${hotel.id}")
-                        })
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(vertical = 8.dp)
+                ) {
+                    items(hotels.value) { hotel ->
+                        HotelCard(
+                            hotel = hotel,
+                            onSeeMoreClick = {
+                                navController.navigate("hotelDetails?hotelId=${hotel.id}")
+                            },
+                            onBookClick = {
+                                navController.navigate("booking?hotelId=${hotel.id}")
+                            }
+                        )
                     }
                 }
             }
@@ -90,39 +86,74 @@ fun HomeScreen(
 }
 
 @Composable
-fun HotelCard(hotel: Hotel, onClick: () -> Unit) {
+fun HotelCard(hotel: Hotel, onSeeMoreClick: () -> Unit, onBookClick: () -> Unit) {
+    Log.d("HotelCard", "Displaying hotel: ${hotel.name}, imageResId: ${hotel.imageResId}")
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
-            AsyncImage(
-                model = hotel.imageResId,
+            val imageResId = try {
+                hotel.imageResId.takeIf { it != 0 && it != -1 } ?: R.drawable.hotel1
+            } catch (e: Exception) {
+                Log.e("HotelCard", "Invalid imageResId: ${hotel.imageResId}, using fallback")
+                R.drawable.hotel1
+            }
+            Image(
+                painter = painterResource(id = imageResId),
                 contentDescription = hotel.name,
                 modifier = Modifier
-                    .size(80.dp)
-                    .padding(end = 16.dp)
+                    .fillMaxWidth()
+                    .height(250.dp),
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop
             )
-            Column {
-                Text(
-                    text = hotel.name,
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    text = hotel.location,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    text = "$${hotel.pricePerHour}/hour",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = hotel.name,
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = hotel.description,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Location: ${hotel.location}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "$${hotel.pricePerHour}/hour",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Button(
+            onClick = onBookClick,
+            modifier = Modifier.weight(1f)
+        ) {
+            Text("Book Now")
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        OutlinedButton(
+            onClick = onSeeMoreClick,
+            modifier = Modifier.weight(1f)
+        ) {
+            Text("See More")
         }
     }
 }

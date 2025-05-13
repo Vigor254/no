@@ -20,7 +20,7 @@ fun HotelDetailsScreen(
     hotelId: Int,
     viewModel: HotelViewModel = hiltViewModel()
 ) {
-    val hotels by viewModel.hotels
+    val hotels by viewModel.hotels.collectAsState()
     val hotel = hotels.find { it.id == hotelId }
 
     Column(

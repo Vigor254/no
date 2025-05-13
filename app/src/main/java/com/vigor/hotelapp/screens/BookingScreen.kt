@@ -19,6 +19,8 @@ fun BookingScreen(
     viewModel: HotelViewModel = hiltViewModel()
 ) {
     var hours by remember { mutableStateOf(1) }
+    var phoneNumber by remember { mutableStateOf("") }
+    var notes by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Column(
@@ -68,10 +70,25 @@ fun BookingScreen(
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
+        OutlinedTextField(
+            value = phoneNumber,
+            onValueChange = { phoneNumber = it },
+            label = { Text("Phone Number") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        OutlinedTextField(
+            value = notes,
+            onValueChange = { notes = it },
+            label = { Text("Additional Notes") },
+            modifier = Modifier.fillMaxWidth(),
+            maxLines = 3
+        )
+        Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
                 if (hours > 0) {
-                    viewModel.bookHotel(hotelId, hours)
+                    viewModel.bookHotel(hotelId, hours, phoneNumber, notes)
                     navController.navigate("profile")
                 } else {
                     errorMessage = "Please enter valid hours"

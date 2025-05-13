@@ -1,24 +1,27 @@
 package com.vigor.hotelapp.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.vigor.hotelapp.R
 import com.vigor.hotelapp.viewmodel.HotelViewModel
 
 @Composable
 fun ProfileScreen(navController: NavHostController, viewModel: HotelViewModel = hiltViewModel()) {
-    val user = viewModel.currentUser.value
-    val bookings = viewModel.bookings.value
+    val user = viewModel.currentUser.collectAsState().value
+    val bookings = viewModel.bookings.collectAsState()
 
     Column(
         modifier = Modifier
@@ -34,12 +37,12 @@ fun ProfileScreen(navController: NavHostController, viewModel: HotelViewModel = 
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
+                Image(
+                    painter = painterResource(id = R.drawable.app_logo),
                     contentDescription = "Profile",
-                    tint = MaterialTheme.colorScheme.primary
+                    modifier = Modifier.size(120.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(16.dp))
                 Text(
                     text = "Profile: ${user?.fullName ?: "Guest"}",
                     style = MaterialTheme.typography.headlineMedium
@@ -56,20 +59,33 @@ fun ProfileScreen(navController: NavHostController, viewModel: HotelViewModel = 
                 Icon(
                     imageVector = Icons.Default.ExitToApp,
                     contentDescription = "Logout",
-                    tint = MaterialTheme.colorScheme.error
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(40.dp)
                 )
             }
         }
-
         Spacer(modifier = Modifier.height(16.dp))
-
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            elevation = CardDefaults.cardElevation(4.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Email: ${user?.email ?: "N/A"}",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
         Text("Your Bookings", style = MaterialTheme.typography.titleMedium)
-
-        if (bookings.isEmpty()) {
+        Spacer(modifier = Modifier.height(8.dp))
+        if (bookings.value.isEmpty()) {
             Text("No bookings found")
         } else {
             LazyColumn {
-                items(bookings) { booking ->
+                items(bookings.value) { booking ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -81,6 +97,8 @@ fun ProfileScreen(navController: NavHostController, viewModel: HotelViewModel = 
                             Text("Hours: ${booking.hours}")
                             Text("Total Cost: $${booking.totalCost}")
                             Text("Date: ${booking.bookingDate}")
+                            Text("Phone Number: ${booking.phoneNumber}")
+                            Text("Notes: ${booking.notes}")
                         }
                     }
                 }
