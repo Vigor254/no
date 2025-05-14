@@ -3,8 +3,6 @@ package com.vigor.hotelapp.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -37,10 +35,6 @@ fun ProfileScreen(
             text = "Profile",
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 16.dp)
-        )
-        Icon(
-            imageVector = Icons.Default.AccountCircle,
-            contentDescription = "Profile"
         )
         if (user != null) {
             Text(text = "Name: ${user.fullName}", style = MaterialTheme.typography.bodyLarge)
