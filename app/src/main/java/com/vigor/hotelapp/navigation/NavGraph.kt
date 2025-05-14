@@ -54,7 +54,7 @@ fun NavGraph(navController: NavHostController) {
             val viewModel: HotelViewModel = hiltViewModel()
             AdminScreen(
                 viewModel = viewModel,
-                onAddHotel = { navController.navigate("add_edit_hotel") },
+                onAddHotel = { navController.navigate("add_edit_hotel/-1") }, // Explicitly set hotelId to -1
                 onEditHotel = { hotelId -> navController.navigate("add_edit_hotel/$hotelId") },
                 onBack = { navController.popBackStack() }
             )

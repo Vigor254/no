@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vigor.hotelapp.model.Hotel
 import com.vigor.hotelapp.viewmodel.HotelViewModel
+import android.util.Log
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +39,7 @@ fun AdminScreen(
     onBack: () -> Unit
 ) {
     val hotels = viewModel.hotels.collectAsState().value
+    Log.d("AdminScreen", "Rendering with ${hotels.size} hotels")
 
     Scaffold(
         topBar = {
@@ -49,7 +51,7 @@ fun AdminScreen(
                     }
                 },
                 actions = {
-                    Button(onClick = onAddHotel) {
+                    Button(onClick = { onAddHotel() }) {
                         Text("Add Hotel")
                     }
                 }
